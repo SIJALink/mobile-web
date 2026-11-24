@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";;
+import { useRouter } from "next/navigation";
 
 const adminMenus = [
   ["▦", "Dashboard"],
@@ -16,6 +16,7 @@ const adminMenus = [
   ["▦", "Riwayat Verifikasi QR"],
   ["♙", "Profil Admin"],
 ];
+
 const kepalaMenus = [
   ["▦", "Dashboard"],
   ["▣", "Penugasan Harian"],
@@ -28,6 +29,15 @@ const kepalaMenus = [
   ["▧", "Dokumentasi Foto/Video"],
   ["📍", "Monitoring Live Location"],
   ["♙", "Profil Kepala SITE"],
+];
+
+const kakonsliMenus = [
+  ["▦", "Dashboard"],
+  ["▣", "Pengaturan Jadwal Piket"],
+  ["♟", "Manajemen Data Guru"],
+  ["📍", "Monitoring Lokasi"],
+  ["✓", "Pemeriksaan Laporan"],
+  ["♙", "Profil Kakonsli"],
 ];
 
 const adminRoutes: Record<string, string> = {
@@ -57,6 +67,15 @@ const kepalaRoutes: Record<string, string> = {
   "Profil Kepala SITE": "/dashboard/profil-kepala",
 };
 
+const kakonsliRoutes: Record<string, string> = {
+  Dashboard: "/dashboard",
+  "Pengaturan Jadwal Piket": "/dashboard/kakonsli/jadwal",
+  "Manajemen Data Guru": "/dashboard/kakonsli/guru",
+  "Monitoring Lokasi": "/dashboard/kakonsli/lokasi",
+  "Pemeriksaan Laporan": "/dashboard/kakonsli/pemeriksaan-laporan",
+  "Profil Kakonsli": "/dashboard/kakonsli/profil",
+};
+
 const stats = [
   ["♟", "24", "Total Petugas"],
   ["▦", "5", "Jadwal Piket Aktif"],
@@ -71,284 +90,432 @@ const activities = [
   ["♟", "Data petugas baru ditambahkan", "1 hari yang lalu"],
 ];
 
+const kakonsliStats = [
+  ["♟", "12", "Total Guru"],
+  ["▣", "5", "Jadwal Piket"],
+  ["▤", "3", "Laporan Menunggu"],
+  ["📍", "8", "Lokasi Aktif"],
+];
+
+const kakonsliActivities = [
+  ["▣", "Jadwal piket guru diperbarui", "1 jam yang lalu"],
+  ["♟", "Data guru baru ditambahkan", "2 jam yang lalu"],
+  ["▤", "Laporan guru menunggu pemeriksaan", "3 jam yang lalu"],
+  ["📍", "Pembaruan monitoring lokasi guru", "4 jam yang lalu"],
+];
+
 export default function Dashboard() {
   const router = useRouter();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [role, setRole] = useState("admin");
-const [namaPengguna, setNamaPengguna] = useState("Admin");
+  const [namaPengguna, setNamaPengguna] = useState("Admin");
 
-useEffect(() => {
-  const dataUser = localStorage.getItem("sijalink_user");
+  useEffect(() => {
+    const dataUser = localStorage.getItem("sijalink_user");
 
-  if (dataUser) {
-    try {
-      const user = JSON.parse(dataUser);
-
-      setRole(user.role);
-      setNamaPengguna(user.name || "Pengguna SIJALink");
-    } catch {
-      console.error("Data akun tidak valid");
+    if (dataUser) {
+      try {
+        const user = JSON.parse(dataUser);
+        setRole(user.role);
+        setNamaPengguna(user.name || "Pengguna SIJALink");
+      } catch {
+        console.error("Data akun tidak valid");
+      }
     }
+  }, []);
+
+  const dashboardStats =
+    role === "kakonsli" ? kakonsliStats : stats;
+
+  const dashboardActivities =
+    role === "kakonsli" ? kakonsliActivities : activities;
+
+  const monitoringTitle =
+    role === "kakonsli"
+      ? "Monitoring Lokasi Guru"
+      : "Monitoring Lokasi Petugas";
+
+  const reportTitle =
+    role === "kakonsli"
+      ? "Pemeriksaan Laporan"
+      : "Ringkasan Laporan";
+
+  const monitoringRoute =
+    role === "kakonsli"
+      ? "/dashboard/kakonsli/lokasi"
+      : role === "kepala"
+      ? "/dashboard/lokasi-kepala"
+      : "/dashboard/monitoring-lokasi";
+
+  const reportRoute =
+    role === "kakonsli"
+      ? "/dashboard/kakonsli/pemeriksaan-laporan"
+      : role === "kepala"
+      ? "/dashboard/pemeriksaan-laporan"
+      : "/dashboard/laporan-piket";
+
+  const menus =
+    role === "admin"
+      ? adminMenus
+      : role === "kepala"
+      ? kepalaMenus
+      : role === "kakonsli"
+      ? kakonsliMenus
+      : [];
+
+  const routes =
+    role === "admin"
+      ? adminRoutes
+      : role === "kepala"
+      ? kepalaRoutes
+      : role === "kakonsli"
+      ? kakonsliRoutes
+      : {};
+
+  const roleName =
+    role === "kepala"
+      ? "Kepala SITE"
+      : role === "kakonsli"
+      ? "Kakonsli"
+      : "Administrator";
+
+  const initials =
+    namaPengguna
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+
+  function handleLogout() {
+    localStorage.removeItem("sijalink_user");
+    router.push("/login");
   }
-}, []);
 
   return (
-    <div className="min-h-screen bg-[#f2f7ff] text-[#102d60]">
-
-      {/* OVERLAY HP */}
-      {menuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
-
+    <div className="min-h-screen bg-slate-100 md:flex">
       {/* SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[270px] overflow-y-auto bg-[#082d68] p-5 text-white transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 transform bg-blue-950 p-6 text-white transition-transform duration-300 md:static md:translate-x-0 ${
           menuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-       <div className="mb-10 flex items-center justify-between">
-  <div className="flex w-full flex-col items-center">
-  <div className="mb-2 text-5xl">🎧</div>
-  <h1 className="text-3xl font-bold italic">
-    SIJA<span className="text-sky-400">Link</span>
-  </h1>
-</div>
+        <div className="mb-10 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-blue-950">
+            S
+          </div>
 
-  <button
-    onClick={() => setMenuOpen(false)}
-    className="text-2xl lg:hidden"
-  >
-    ✕
-  </button>
-</div>
+          <div>
+            <h1 className="text-xl font-bold">SIJALink</h1>
+            <p className="text-xs text-blue-200">
+              Integrated Service System
+            </p>
+          </div>
+        </div>
 
-{role === "admin" ? (
-  <>
-    <p className="mb-3 text-sm text-blue-200">
-      Menu Admin
-    </p>
+        <div className="mb-6 rounded-xl bg-blue-900 p-4">
+          <p className="text-xs text-blue-200">Login sebagai</p>
+          <p className="mt-1 font-semibold">{roleName}</p>
+          <p className="mt-1 text-xs text-blue-200">
+            {namaPengguna}
+          </p>
+        </div>
 
-    <nav className="space-y-2">
-      {adminMenus.map(([icon, label], index) => (
-        <Link
-          key={label}
-          href={adminRoutes[label] || "/dashboard"}
-          onClick={() => setMenuOpen(false)}
-          className={`flex items-center gap-4 rounded-xl px-4 py-3 text-sm transition ${
-            index === 0
-              ? "bg-blue-600 font-semibold"
-              : "hover:bg-blue-800"
-          }`}
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-blue-300">
+          Menu Utama
+        </p>
+
+        <nav className="space-y-2">
+          {menus.map(([icon, label]) => (
+            <Link
+              key={label}
+              href={routes[label]}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-blue-100 transition hover:bg-blue-800 hover:text-white"
+            >
+              <span className="w-6 text-lg">{icon}</span>
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <button
+          onClick={handleLogout}
+          className="mt-10 w-full border-t border-blue-800 pt-6 text-left text-sm text-blue-100 hover:text-white"
         >
-          <span className="text-xl">{icon}</span>
-          {label}
-        </Link>
-      ))}
-    </nav>
-  </>
-) : role === "kepala" ? (
-  <>
-    <p className="mb-3 text-sm text-blue-200">
-      Menu Kepala SITE
-    </p>
-
-    <nav className="space-y-2">
-      {kepalaMenus.map(([icon, label], index) => (
-        <Link
-          key={label}
-          href={kepalaRoutes[label] || "/dashboard"}
-          onClick={() => setMenuOpen(false)}
-          className={`flex items-center gap-4 rounded-xl px-4 py-3 text-sm transition ${
-            index === 0
-              ? "bg-blue-600 font-semibold"
-              : "hover:bg-blue-800"
-          }`}
-        >
-          <span className="text-xl">{icon}</span>
-          {label}
-        </Link>
-      ))}
-    </nav>
-  </>
-) : (
-  <p className="rounded-xl bg-blue-900 p-3 text-sm">
-    Akun ini tidak memiliki akses Dashboard Admin atau Kepala SITE.
-  </p>
-)}
-
-      <button
-onClick={() => {
-  localStorage.removeItem("sijalink_user");
-  router.push("/login");
-}}
-  className="mt-8 w-full border-t border-blue-700 pt-6 text-left text-sm hover:text-blue-200"
->
-  ⇥ Logout
-</button>
+          ⇥ Logout
+        </button>
       </aside>
 
+      {/* OVERLAY MOBILE */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
       {/* KONTEN UTAMA */}
-      <main className="min-h-screen p-4 sm:p-6 lg:ml-[270px] lg:p-8">
-
+      <main className="min-w-0 flex-1">
         {/* HEADER */}
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-100 bg-white p-4 shadow-sm sm:p-6">
-
+        <header className="flex items-center justify-between border-b bg-white px-5 py-5 md:px-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setMenuOpen(true)}
-              className="rounded-lg bg-blue-50 px-3 py-2 text-2xl text-blue-900 lg:hidden"
-              aria-label="Buka menu"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-lg border px-3 py-2 text-xl text-slate-700 md:hidden"
             >
               ☰
             </button>
 
             <div>
-              <p className="text-sm text-slate-500">
-                Selamat Datang,
-              </p>
-              <h2 className="text-2xl font-bold text-[#0b3069] sm:text-3xl">
-                SIJALink 👋
+              <h2 className="text-xl font-bold text-slate-800">
+                Dashboard SIJALink
               </h2>
-              <p className="mt-1 hidden text-sm text-slate-500 sm:block">
-                Kelola data dan pantau aktivitas sistem dengan mudah.
+              <p className="text-sm text-slate-500">
+                Sistem Informasi dan Layanan Terintegrasi
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="text-xl text-blue-800" aria-label="Notifikasi">
-              ♧
-            </button>
-
-            <div className="flex items-center gap-2 rounded-xl bg-blue-50 p-2 sm:gap-3 sm:p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#103c82] font-bold text-white">
-                AD
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold">{namaPengguna}</p>
-               <p className="hidden text-xs text-slate-500 sm:block">
-                  {role === "kepala" ? "Kepala SITE" : "Administrator"}
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-semibold text-slate-800">
+                {namaPengguna}
               </p>
-              </div>
-              <span>⌄</span>
+              <p className="text-xs text-slate-500">{roleName}</p>
+            </div>
+
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-800">
+              {initials}
             </div>
           </div>
         </header>
 
-        {/* KARTU RINGKASAN */}
-        <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map(([icon, number, label]) => (
-            <div
-              key={label}
-              className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm"
-            >
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-100 text-2xl text-blue-800 sm:h-16 sm:w-16">
-                {icon}
-              </div>
+        <div className="space-y-7 p-5 md:p-8">
+          {/* SAMBUTAN */}
+          <section className="rounded-2xl bg-gradient-to-r from-blue-950 to-blue-600 p-7 text-white shadow-sm">
+            <p className="text-sm text-blue-100">
+              Selamat datang di SIJALink
+            </p>
 
-              <div>
-                <h3 className="text-3xl font-bold">{number}</h3>
-                <p className="text-sm text-slate-500">{label}</p>
-              </div>
+            <h1 className="mt-2 text-2xl font-bold md:text-3xl">
+              Halo, {namaPengguna}! 👋
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">
+              {role === "kakonsli"
+                ? "Kelola jadwal piket, data guru, monitoring lokasi, dan pemeriksaan laporan melalui dashboard Kakonsli."
+                : role === "kepala"
+                ? "Pantau aktivitas petugas, pengaduan pelanggan, penugasan, dan laporan melalui dashboard Kepala SITE."
+                : "Kelola data petugas, jadwal piket, pengaduan pelanggan, dan aktivitas layanan melalui dashboard Admin."}
+            </p>
+
+            <div className="mt-5 inline-flex rounded-lg bg-white/15 px-4 py-2 text-sm">
+              Login sebagai {roleName}
             </div>
-          ))}
-        </section>
+          </section>
 
-        {/* AKTIVITAS DAN MONITORING */}
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.3fr_1fr]">
-
-          {/* AKTIVITAS TERBARU */}
-          <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-bold sm:text-xl">
-                Aktivitas Terbaru
-              </h3>
-              <a href="#" className="text-xs font-semibold text-blue-600 sm:text-sm">
-                Lihat Semua →
-              </a>
+          {/* STATISTIK */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-slate-800">
+                Ringkasan Informasi
+              </h2>
+              <p className="text-sm text-slate-500">
+                Informasi umum aktivitas SIJALink
+              </p>
             </div>
 
-            <div className="space-y-5">
-              {activities.map(([icon, title, time]) => (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {dashboardStats.map((item, index) => (
                 <div
-                  key={title}
-                  className="flex items-center gap-3 border-b border-slate-100 pb-4 last:border-0"
+                  key={index}
+                  className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xl text-blue-800">
-                    {icon}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">
+                        {item[2]}
+                      </p>
+                      <h3 className="mt-2 text-3xl font-bold text-slate-800">
+                        {item[1]}
+                      </h3>
+                    </div>
+
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-2xl text-blue-700">
+                      {item[0]}
+                    </div>
                   </div>
 
-                  <div>
-                    <p className="text-sm font-semibold">{title}</p>
-                    <p className="mt-1 text-xs text-slate-500">{time}</p>
-                  </div>
+                  <p className="mt-4 text-xs text-slate-400">
+                    Data contoh dashboard
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* BAGIAN KANAN */}
-          <div className="space-y-5">
+          {/* AKTIVITAS DAN MONITORING */}
+          <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            {/* AKTIVITAS */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm xl:col-span-2">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800">
+                    Aktivitas Terbaru
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Informasi aktivitas terakhir
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                {dashboardActivities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 border-b border-slate-100 pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg text-blue-700">
+                      {activity[0]}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-700">
+                        {activity[1]}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {activity[2]}
+                      </p>
+                    </div>
+
+                    <span className="text-xs text-green-600">
+                      ●
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* MONITORING LOKASI */}
-            <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold">
-                  Monitoring Lokasi
-                </h3>
-                <a href="#" className="text-xs font-semibold text-blue-600">
-                  Lihat Detail →
-                </a>
-              </div>
-
-              <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-100 via-slate-100 to-green-100">
-                <div className="text-center">
-                  <div className="text-5xl">📍</div>
-                  <p className="mt-3 rounded-lg bg-white px-4 py-2 text-xs font-semibold shadow">
-                    🟢 Petugas Aktif
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-bold text-slate-800">
+                    {monitoringTitle}
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Ringkasan pemantauan lokasi
                   </p>
                 </div>
-              </div>
-            </div>
 
-            {/* RINGKASAN LAPORAN */}
-            <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold">
-                  Ringkasan Laporan
-                </h3>
-                <a href="#" className="text-xs font-semibold text-blue-600">
-                  Lihat Semua →
-                </a>
+                <span className="text-2xl">📍</span>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-bold">
-                    Laporan Kinerja Petugas
+              <div className="mt-5 flex h-40 items-center justify-center rounded-xl bg-blue-50">
+                <div className="text-center">
+                  <div className="text-5xl">🗺️</div>
+                  <p className="mt-2 text-sm font-semibold text-blue-900">
+                    Peta Monitoring
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Ringkasan laporan petugas
+                    Tampilan lokasi
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-500">
+                    {role === "kakonsli"
+                      ? "Guru Aktif"
+                      : "Petugas Aktif"}
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-slate-800">
+                    {role === "kakonsli" ? "8 Guru" : "18 Petugas"}
                   </p>
                 </div>
 
-                <button className="rounded-xl bg-[#0b3476] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-                  Unduh Laporan ↓
-                </button>
+                <Link
+                  href={monitoringRoute}
+                  className="text-xs font-semibold text-blue-600 hover:underline"
+                >
+                  Lihat Detail →
+                </Link>
               </div>
             </div>
+          </section>
 
-          </div>
-        </section>
+          {/* LAPORAN */}
+          <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">
+                  {reportTitle}
+                </h2>
 
-        <footer className="mt-8 border-t border-blue-100 py-5 text-center text-xs text-slate-500">
-          © 2026 SIJALink. All Rights Reserved.
-        </footer>
+                <p className="mt-1 text-sm text-slate-500">
+                  {role === "kakonsli"
+                    ? "Kelola dan periksa laporan aktivitas guru piket."
+                    : "Pantau laporan dan aktivitas layanan SIJALink."}
+                </p>
+              </div>
 
+              <Link
+                href={reportRoute}
+                className="rounded-xl bg-blue-700 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-800"
+              >
+                {role === "kakonsli"
+                  ? "Periksa Laporan →"
+                  : "Lihat Laporan →"}
+              </Link>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-blue-50 p-4">
+                <p className="text-sm text-slate-500">
+                  Status Sistem
+                </p>
+                <p className="mt-2 font-bold text-blue-800">
+                  Sistem SIJALink
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Tampilan dashboard aktif
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-green-50 p-4">
+                <p className="text-sm text-slate-500">
+                  Aktivitas
+                </p>
+                <p className="mt-2 font-bold text-green-700">
+                  Monitoring
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Pemantauan kegiatan
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-orange-50 p-4">
+                <p className="text-sm text-slate-500">
+                  Pemeriksaan
+                </p>
+                <p className="mt-2 font-bold text-orange-700">
+                  Laporan
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Informasi laporan kegiatan
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* FOOTER */}
+          <footer className="pb-4 text-center text-xs text-slate-400">
+            © 2026 SIJALink — Integrated Customer Service & Field Service Management System
+          </footer>
+        </div>
       </main>
     </div>
   );

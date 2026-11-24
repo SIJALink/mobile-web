@@ -44,7 +44,14 @@ export default function LoginPage() {
         name: "Petugas SIJALink",
         role: "petugas",
       },
-    ];
+      {
+        email: "kakonsli@sijalink.test",
+        username: "kakonsli",
+        password: "Kakonsli123",
+        name: "Kakonsli SIJALink",
+        role: "kakonsli",
+      },
+      ];
 
     let akunTerdaftar = [];
 
@@ -84,11 +91,15 @@ export default function LoginPage() {
       })
     );
 
-    if (akun.role === "admin" || akun.role === "kepala") {
-      router.push("/dashboard");
-    } else {
-      router.push(`/dashboard/${akun.role}`);
-    }
+   if (
+  akun.role === "admin" ||
+  akun.role === "kepala" ||
+  akun.role === "kakonsli"
+) {
+  router.push("/dashboard");
+} else {
+  router.push(`/dashboard/${akun.role}`);
+}
   }
 
   return (
@@ -158,8 +169,7 @@ export default function LoginPage() {
     type="button"
     onClick={() => setShowPassword(!showPassword)}
     className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-slate-500"
-  >
-    {showPassword ? "🙈" : "👁️"}
+  >{showPassword ? "👁" : "◉"}
   </button>
 </div>
             </div>
@@ -168,18 +178,6 @@ export default function LoginPage() {
               Login →
             </button>
           </form>
-
-          <div className="auth-note">
-            <strong>Akun demo:</strong>
-            <br />
-            Admin: admin@sijalink.test / Admin123
-            <br />
-            Kepala SITE: kepala@sijalink.test / Kepala123
-            <br />
-            Pelanggan: pelanggan@sijalink.test / 123456
-            <br />
-            Petugas: petugas@sijalink.test / 123456
-          </div>
 
           <p className="auth-switch">
             Belum punya akun?{" "}

@@ -70,7 +70,7 @@ export default function RegisterPage() {
     );
 
     alert("Pendaftaran berhasil! Silakan login.");
-    router.push("/");
+router.push("/login");
   }
 
   return (
@@ -153,10 +153,15 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="auth-switch">
-            Sudah punya akun?{" "}
-            <Link href="/">Login di sini →</Link>
-          </p>
+          <p className="text-center text-sm text-blue-900">
+  Sudah punya akun?{" "}
+  <Link
+    href="/login"
+    className="font-semibold text-blue-700 underline"
+  >
+    Login di sini →
+  </Link>
+</p>
         </section>
       </div>
     </main>
